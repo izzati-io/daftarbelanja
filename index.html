@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Pembelian Produk</title>
+    <style>
+        /* Gaya Cerah dan Mewah */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fdf6e3;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #d97706;
+        }
+
+        form, .dashboard {
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fef3c7;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            font-weight: bold;
+            color: #b45309;
+        }
+
+        input, button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 1px solid #f59e0b;
+            border-radius: 5px;
+        }
+
+        input {
+            background-color: #fff7ed;
+            color: #333333;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #f59e0b;
+            color: #ffffff;
+            font-weight: bold;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #d97706;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            color: #333333;
+        }
+
+        table, th, td {
+            border: 1px solid #f59e0b;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+
+        .actions button {
+            width: auto;
+            margin: 5px;
+            padding: 5px 15px;
+        }
+
+        .btn-edit {
+            background-color: #facc15;
+            color: #333333;
+        }
+
+        .btn-share {
+            background-color: #10b981;
+            color: #ffffff;
+        }
+
+        .btn-delete {
+            background-color: #ef4444;
+            color: #ffffff;
+        }
+
+        .btn-total {
+            background-color: #2563eb;
+            color: #ffffff;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Daftar Pembelian Produk / Kebutuhan</h1>
+
+    <!-- Form Input Produk -->
+    <form id="productForm">
+        <h2>Tambah Produk / Kebutuhan</h2>
+        <label for="productName">Nama Produk / Kebutuhan:</label>
+        <input type="text" id="productName" placeholder="Contoh: Sabun Cair" required>
+
+        <label for="productQuantity">Jumlah:</label>
+        <input type="number" id="productQuantity" placeholder="Masukkan jumlah" required>
+
+        <label for="productPrice">Harga Dasar (per unit):</label>
+        <input type="number" id="productPrice" placeholder="Masukkan harga per unit" required>
+
+        <button type="submit">Tambah Produk / Kebutuhan</button>
+    </form>
+
+    <!-- Dashboard Hasil -->
+    <div class="dashboard">
+        <h2>Dashboard Produk / Kebutuhan</h2>
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Produk / Kebutuhan</th>
+                    <th>Jumlah</th>
+                    <th>Harga Dasar</th>
+                    <th>Total Harga</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data produk akan ditambahkan di sini -->
+            </tbody>
+        </table>
+        <button class="btn-total" onclick="calculateGrandTotal()">Total Harga Keseluruhan</button>
+        <h3 id="grandTotal" style="text-align: center; color: #b45309;"></h3>
+    </div>
+
+    <script>
+        const productForm = document.getElementById('productForm');
+        const productTable = document.getElementById('productTable').querySelector('tbody');
+        const grandTotalElement = document.getElementById('grandTotal');
+
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+
+        // Fungsi untuk memperbarui tampilan tabel
+        function updateTable() {
+            productTable.innerHTML = '';
+            products.forEach((product, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${product.name}</td>
+                    <td>${product.quantity}</td>
+                    <td>Rp ${parseInt(product.price).toLocaleString()}</td>
+                    <td>Rp ${(product.quantity * product.price).toLocaleString()}</td>
+                    <td class="actions">
+                        <button class="btn-edit" onclick="editProduct(${index})">Edit</button>
+                        <button class="btn-share" onclick="shareProduct(${index})">Share</button>
+                        <button class="btn-delete" onclick="deleteProduct(${index})">Hapus</button>
+                    </td>
+                `;
+                productTable.appendChild(row);
+            });
+            localStorage.setItem('products', JSON.stringify(products));
+        }
+
+        // Fungsi untuk menambah produk
+        productForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('productName').value;
+            const quantity = parseInt(document.getElementById('productQuantity').value);
+            const price = parseInt(document.getElementById('productPrice').value);
+
+            if (name && quantity > 0 && price > 0) {
+                products.push({ name, quantity, price });
+                updateTable();
+                productForm.reset();
+            } else {
+                alert('Mohon masukkan data yang valid!');
+            }
+        });
+
+        // Fungsi untuk mengedit produk
+        function editProduct(index) {
+            const newName = prompt('Masukkan nama produk baru:', products[index].name);
+            const newQuantity = parseInt(prompt('Masukkan jumlah baru:', products[index].quantity));
+            const newPrice = parseInt(prompt('Masukkan harga dasar baru:', products[index].price));
+
+            if (newName && newQuantity > 0 && newPrice > 0) {
+                products[index] = { name: newName, quantity: newQuantity, price: newPrice };
+                updateTable();
+            } else {
+                alert('Data yang dimasukkan tidak valid!');
+            }
+        }
+
+        // Fungsi untuk membagikan produk
+        function shareProduct(index) {
+            const product = products[index];
+            const shareText = `Produk: ${product.name}\nJumlah: ${product.quantity}\nHarga Dasar: Rp ${product.price.toLocaleString()}\nTotal Harga: Rp ${(product.quantity * product.price).toLocaleString()}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Produk yang akan dibeli',
+                    text: shareText,
+                }).catch(console.error);
+            } else {
+                alert('Fitur share tidak didukung di perangkat ini.');
+            }
+        }
+
+        // Fungsi untuk menghitung total keseluruhan
+        function calculateGrandTotal() {
+            const grandTotal = products.reduce((sum, product) => sum + (product.quantity * product.price), 0);
+            grandTotalElement.textContent = `Total Keseluruhan: Rp ${grandTotal.toLocaleString()}`;
+        }
+
+        // Fungsi untuk menghapus produk
+        function deleteProduct(index) {
+            if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                products.splice(index, 1);
+                updateTable();
+                calculateGrandTotal();
+            }
+        }
+
+        // Muat data dari LocalStorage
+        window.onload = updateTable;
+    </script>
+</body>
+</html>
